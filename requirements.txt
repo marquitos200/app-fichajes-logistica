@@ -11,3 +11,4 @@ starlette==0.37.2
 psycopg2-binary==2.9.9
 # Optional for PDF export (choose one):
 # weasyprint==62.3
+itsdangerous==2.1.2
