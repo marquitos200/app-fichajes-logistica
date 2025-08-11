@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Resumen de la empresa -->
+<div class="card">
+  <h2>🏢 Panel de Administración</h2>
+  <div class="admin-stats">
+    <div class="stat-card">
+      <h3>{{ users|length }}</h3>
+      <p>Repartidores</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ partes|length }}</h3>
+      <p>Partes este mes</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ total_km or 0 }}km</h3>
+      <p>Kilómetros totales</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ total_gastos or 0 }}€</h3>
+      <p>Gastos totales</p>
+    </div>
+  </div>
+  
+  <div class="company-info">
+    <p><strong>🔑 Clave de empresa:</strong> <code>{{ company.company_key }}</code></p>
+    <small>⚠️ Comparte esta clave solo con tus repartidores para que puedan registrarse</small>
+  </div>
+</div>
+
+<!-- Lista de Repartidores -->
+<div class="card">
+  <h3>👥 Repartidores de la Empresa</h3>
+  
+  <div style="overflow-x: auto;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Repartidor</th>
+          <th>Partes este mes</th>
+          <th>Total KM</th>
+          <th>Total Gastos</th>
+          <th>Último parte</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td><strong>{{ user.username }}</strong></td>
+          <td>{{ user.partes_count or 0 }}</td>
+          <td>{{ user.total_km or 0 }}km</td>
+          <td>{{ user.total_gastos or 0 }}€</td>
+          <td>{{ user.ultimo_parte or 'Nunca' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" style="text-align:center; color:#666;">No hay repartidores registrados aún</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Reportes y Filtros -->
+<div class="card">
+  <h3>📊 Reportes y Exportación</h3>
+  
+  <form method="get" action="/admin">
+    <div class="row">
+      <div>
+        <label>👤 Repartidor</label>
+        <select class="input" name="user_id">
+          <option value="">🌐 Todos los repartidores</option>
+          {% for u in users %}
+          <option value="{{ u.id }}" {% if selected_user and selected_user == u.id %}selected{% endif %}>
+            {{ u.username }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>📅 Desde</label>
+        <input class="input" type="date" name="desde" value="{{ desde }}">
+      </div>
+      <div>
+        <label>📅 Hasta</label>
+        <input class="input" type="date" name="hasta" value="{{ hasta }}">
+      </div>
+    </div>
+    
+    <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+      <button type="submit" class="primary">🔍 Aplicar Filtros</button>
+      <a href="/admin/export/excel?user_id={{ selected_user or '' }}&desde={{ desde }}&hasta={{ hasta }}">
+        <button type="button" class="secondary">📊 Exportar Excel</button>
+      </a>
+      <a href="/admin/export/pdf?user_id={{ selected_user or '' }}&desde={{ desde }}&hasta={{ hasta }}">
+        <button type="button" class="secondary">📄 Exportar PDF</button>
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Tabla de partes detallada -->
+<div class="card">
+  <h3>📋 Partes Detallados</h3>
+  
+  <div style="overflow-x: auto;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>📅 Fecha</th>
+          <th>👤 Repartidor</th>
+          <th>🛣️ Ruta</th>
+          <th>📏 Kilómetros</th>
+          <th>⏰ Horas</th>
+          <th>📦 Envíos</th>
+          <th>💰 Gastos</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in partes %}
+        <tr>
+          <td>{{ p.fecha.strftime('%d/%m/%Y') if p.fecha else p.fecha }}</td>
+          <td><strong>{{ p.user.username if p.user else 'N/A' }}</strong></td>
+          <td>
+            {% if p.salida_lugar and p.llegada_lugar %}
+              {{ p.salida_lugar }} → {{ p.llegada_lugar }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>
+            <div>{{ p.km_salida }} → {{ p.km_llegada }}km</div>
+            <div><strong>Diff: {{ p.km_diferencia }}km</strong></div>
+          </td>
+          <td>{{ p.horas }}h</td>
+          <td>{{ p.num_envios }}</td>
+          <td>
+            {% set total_gastos = (p.dietas or 0) + (p.alojamiento or 0) + (p.transporte_billetes or 0) + (p.gasolina or 0) + (p.comida or 0) + (p.otros_consumiciones or 0) + (p.material or 0) + (p.otros_gastos or 0) %}
+            <strong>{{ "%.2f"|format(total_gastos) }}€</strong>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center; padding: 40px;">
+          📭 No hay partes en el período seleccionado
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  {% if partes %}
+  <div class="table-summary">
+    <strong>
+      📊 Total: {{ partes|length }} partes | 
+      🛣️ {{ total_km or 0 }}km | 
+      ⏰ {{ total_horas or 0 }}h | 
+      💰 {{ total_gastos or 0 }}€
+    </strong>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,671 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Navegación de mes/año -->
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>📅 Dashboard Mensual - {{ meses[mes-1][1] }} {{ año }}</h2>
+    
+    <form method="get" style="display: flex; gap: 10px; align-items: center;">
+      <select name="mes" class="input" style="width: auto;">
+        {% for m_num, m_nombre in meses %}
+        <option value="{{ m_num }}" {% if m_num == mes %}selected{% endif %}>{{ m_nombre }}</option>
+        {% endfor %}
+      </select>
+      
+      <select name="año" class="input" style="width: auto;">
+        {% for a in años %}
+        <option value="{{ a }}" {% if a == año %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+      </select>
+      
+      <button type="submit" class="primary">📅 Cambiar</button>
+    </form>
+  </div>
+  
+  <!-- Estadísticas del mes -->
+  <div class="admin-stats">
+    <div class="stat-card">
+      <h3>{{ dias_trabajados }}</h3>
+      <p>Días trabajados</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ "%.0f"|format(total_km) }}km</h3>
+      <p>Kilómetros</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ "%.1f"|format(total_horas) }}h</h3>
+      <p>Horas</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ "%.2f"|format(total_gastos) }}€</h3>
+      <p>Gastos</p>
+    </div>
+  </div>
+</div>
+
+<!-- Calendario mensual -->
+<div class="card">
+  <h3>📅 Calendario del Mes</h3>
+  
+  <div class="calendario">
+    <!-- Cabecera días de la semana -->
+    <div class="calendario-header">
+      <div class="dia-header">Lun</div>
+      <div class="dia-header">Mar</div>
+      <div class="dia-header">Mié</div>
+      <div class="dia-header">Jue</div>
+      <div class="dia-header">Vie</div>
+      <div class="dia-header">Sáb</div>
+      <div class="dia-header">Dom</div>
+    </div>
+    
+    <!-- Semanas del mes -->
+    {% for semana in semanas %}
+    <div class="calendario-semana">
+      {% for dia_info in semana %}
+        {% if dia_info %}
+        <div class="dia-celda {% if dia_info.es_hoy %}hoy{% endif %} {% if dia_info.partes %}con-parte{% endif %} {% if dia_info.es_futuro %}futuro{% endif %}">
+          <div class="dia-numero">{{ dia_info.dia }}</div>
+          {% if dia_info.partes %}
+            <div class="dia-resumen">
+              <small>📦 {{ dia_info.num_partes }} parte{% if dia_info.num_partes != 1 %}s{% endif %}</small>
+              <small>✅ {{ dia_info.total_envios }} envíos</small>
+              <small>🛣️ {{ "%.0f"|format(dia_info.total_km) }}km</small>
+              {% if dia_info.total_gastos > 0 %}
+              <small>💰 {{ "%.2f"|format(dia_info.total_gastos) }}€</small>
+              {% endif %}
+            </div>
+            <button class="btn-dia" onclick="verPartesDia('{{ dia_info.fecha }}')">👁️ Ver</button>
+          {% else %}
+            {% if not dia_info.es_futuro %}
+            <button class="btn-dia nuevo" onclick="crearDia('{{ dia_info.fecha }}')">+ Agregar</button>
+            {% endif %}
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="dia-celda vacio"></div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+
+<div class="card">
+  <h3>📋 Resumen Mensual</h3>
+  
+  {% if parte_mensual %}
+  <div class="alert alert-success">
+    ✅ <strong>Parte mensual ya guardado</strong> 
+    (Creado: {{ parte_mensual.fecha_creacion.strftime('%d/%m/%Y %H:%M') }})
+    {% if parte_mensual.fecha_actualizacion != parte_mensual.fecha_creacion %}
+    (Actualizado: {{ parte_mensual.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }})
+    {% endif %}
+  </div>
+  {% endif %}
+  
+  <form method="post" action="/repartidor/parte-mensual">
+    <input type="hidden" name="año" value="{{ año }}">
+    <input type="hidden" name="mes" value="{{ mes }}">
+    
+    <div style="margin-bottom: 16px;">
+      <label>📝 Observaciones del mes</label>
+      <textarea class="input" name="observaciones_mes" rows="3" placeholder="Comentarios generales del mes...">{{ parte_mensual.observaciones_mes if parte_mensual else '' }}</textarea>
+    </div>
+    
+    <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+      <h4>📊 Totales calculados automáticamente:</h4>
+      <div class="row">
+        <div><strong>Días trabajados:</strong> {{ dias_trabajados }}</div>
+        <div><strong>Kilómetros:</strong> {{ "%.0f"|format(total_km) }}km</div>
+        <div><strong>Horas:</strong> {{ "%.1f"|format(total_horas) }}h</div>
+        <div><strong>Gastos:</strong> {{ "%.2f"|format(total_gastos) }}€</div>
+      </div>
+    </div>
+    
+    <button type="submit" class="primary">
+      {% if parte_mensual %}
+      🔄 Actualizar Parte Mensual
+      {% else %}
+      💾 Guardar Parte Mensual
+      {% endif %}
+    </button>
+  </form>
+</div>
+
+<!-- Modal para crear/editar parte diario -->
+<div id="modalParte" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close" onclick="cerrarModal()">&times;</span>
+    <h3 id="modalTitulo">Nuevo Parte Diario</h3>
+    
+    <form id="formParte" method="post" action="/repartidor/parte">
+      <input type="hidden" id="modalFecha" name="fecha">
+      <input type="hidden" id="modalParteId" name="parte_id" value="">
+      
+      <!-- Kilómetros -->
+      <fieldset class="fieldset">
+        <legend>🚗 Kilómetros</legend>
+        <div class="row">
+          <div>
+            <label>Km Salida</label>
+            <input class="input" type="number" step="0.1" name="km_salida" id="km_salida">
+          </div>
+          <div>
+            <label>Km Llegada</label>
+            <input class="input" type="number" step="0.1" name="km_llegada" id="km_llegada">
+          </div>
+          <div>
+            <label>Km Diferencia</label>
+            <input class="input" type="number" step="0.1" name="km_diferencia" id="km_diferencia">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Repostaje</label>
+            <input class="input" type="text" name="repostaje" id="repostaje">
+          </div>
+          <div>
+            <label>Nº Factura</label>
+            <input class="input" type="text" name="num_factura" id="num_factura">
+          </div>
+        </div>
+      </fieldset>
+      
+      <!-- Rutas Dinámicas -->
+      <fieldset class="fieldset">
+        <legend>🛣️ Rutas del Día</legend>
+        <div id="contenedorRutas">
+          <!-- Las rutas se añadirán dinámicamente aquí -->
+        </div>
+        <div style="text-align: center; margin-top: 16px;">
+          <button type="button" class="secondary" onclick="agregarRuta()">+ Agregar Ruta</button>
+        </div>
+      </fieldset>
+      
+      <!-- Gastos -->
+      <fieldset class="fieldset">
+        <legend>💰 Gastos</legend>
+        <div class="row">
+          <div>
+            <label>Dietas (€)</label>
+            <input class="input" type="number" step="0.01" name="dietas" id="dietas">
+          </div>
+          <div>
+            <label>Alojamiento (€)</label>
+            <input class="input" type="number" step="0.01" name="alojamiento" id="alojamiento">
+          </div>
+          <div>
+            <label>Transporte (€)</label>
+            <input class="input" type="number" step="0.01" name="transporte_billetes" id="transporte_billetes">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Gasolina (€)</label>
+            <input class="input" type="number" step="0.01" name="gasolina" id="gasolina">
+          </div>
+          <div>
+            <label>Comida (€)</label>
+            <input class="input" type="number" step="0.01" name="comida" id="comida">
+          </div>
+          <div>
+            <label>Material (€)</label>
+            <input class="input" type="number" step="0.01" name="material" id="material">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Otros Gastos (€)</label>
+            <input class="input" type="number" step="0.01" name="otros_gastos" id="otros_gastos">
+          </div>
+        </div>
+      </fieldset>
+      
+      <!-- Datos básicos (calculados automáticamente) -->
+      <fieldset class="fieldset">
+        <legend>📋 Resumen del Día</legend>
+        <div class="row">
+          <div>
+            <label>Nº Total Envíos (calculado)</label>
+            <input class="input" type="number" name="num_envios" id="num_envios" readonly style="background: var(--hover);">
+          </div>
+          <div>
+            <label>Km Total (calculado)</label>
+            <input class="input" type="number" step="0.1" name="km_diferencia" id="km_diferencia" readonly style="background: var(--hover);">
+          </div>
+          <div>
+            <label>Horas Trabajadas</label>
+            <input class="input" type="number" step="0.1" name="horas" id="horas">
+          </div>
+        </div>
+        <div>
+          <label>Observaciones Generales del Día</label>
+          <textarea class="input" name="observaciones" id="observaciones" rows="2" placeholder="Comentarios generales del día..."></textarea>
+        </div>
+      </fieldset>
+      
+      <div style="margin-top: 20px; text-align: right;">
+        <button type="button" class="secondary" onclick="cerrarModal()">Cancelar</button>
+        <button type="submit" class="primary">💾 Guardar Parte</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para ver múltiples partes de un día -->
+<div id="modalDiaPartes" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close" onclick="cerrarModalDia()">&times;</span>
+    <h3 id="modalDiaTitulo">Partes del día</h3>
+    
+    <div id="listaPartesDia">
+      <!-- Se llenará dinámicamente -->
+    </div>
+    
+    <div style="margin-top: 20px; text-align: center;">
+      <button type="button" class="primary" onclick="agregarNuevoParteDia()">+ Agregar Nueva Ruta</button>
+      <button type="button" class="secondary" onclick="cerrarModalDia()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentParteId = null;
+let currentFecha = null;
+let contadorRutas = 0;
+
+function crearDia(fecha) {
+  currentParteId = null;
+  currentFecha = fecha;
+  contadorRutas = 0;
+  document.getElementById('modalTitulo').textContent = 'Nuevo Parte - ' + fecha;
+  document.getElementById('modalFecha').value = fecha;
+  document.getElementById('modalParteId').value = '';
+  
+  // Limpiar formulario
+  document.getElementById('formParte').reset();
+  document.getElementById('modalFecha').value = fecha;
+  document.getElementById('modalParteId').value = '';
+  
+  // Limpiar y agregar primera ruta
+  document.getElementById('contenedorRutas').innerHTML = '';
+  agregarRuta();
+  
+  document.getElementById('modalParte').style.display = 'block';
+}
+
+function agregarRuta() {
+  contadorRutas++;
+  const contenedor = document.getElementById('contenedorRutas');
+  
+  const rutaDiv = document.createElement('div');
+  rutaDiv.className = 'ruta-item';
+  rutaDiv.id = `ruta_${contadorRutas}`;
+  rutaDiv.style.cssText = 'border: 2px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; background: var(--card);';
+  
+  rutaDiv.innerHTML = `
+    <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 12px;">
+      <h4 style="margin: 0; color: var(--accent);">🚚 Ruta ${contadorRutas}</h4>
+      ${contadorRutas > 1 ? `<button type="button" onclick="eliminarRuta(${contadorRutas})" style="background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">🗑️</button>` : ''}
+    </div>
+    
+    <div class="row">
+      <div>
+        <label>Descripción de la Ruta</label>
+        <input class="input" type="text" name="ruta_${contadorRutas}_descripcion" placeholder="Ej: Almacén a Cliente A">
+      </div>
+    </div>
+    
+    <div class="row">
+      <div>
+        <label>Lugar Salida</label>
+        <input class="input" type="text" name="ruta_${contadorRutas}_salida_lugar" onchange="calcularTotales()">
+      </div>
+      <div>
+        <label>Hora Salida</label>
+        <input class="input" type="time" name="ruta_${contadorRutas}_salida_hora">
+      </div>
+    </div>
+    
+    <div class="row">
+      <div>
+        <label>Lugar Llegada</label>
+        <input class="input" type="text" name="ruta_${contadorRutas}_llegada_lugar" onchange="calcularTotales()">
+      </div>
+      <div>
+        <label>Hora Llegada</label>
+        <input class="input" type="time" name="ruta_${contadorRutas}_llegada_hora">
+      </div>
+    </div>
+    
+    <div class="row">
+      <div>
+        <label>Kilómetros de esta Ruta</label>
+        <input class="input" type="number" step="0.1" name="ruta_${contadorRutas}_km" onchange="calcularTotales()" placeholder="0.0">
+      </div>
+      <div>
+        <label>Envíos en esta Ruta</label>
+        <input class="input" type="number" name="ruta_${contadorRutas}_envios" onchange="calcularTotales()" placeholder="0">
+      </div>
+    </div>
+    
+    <div>
+      <label>Observaciones de la Ruta</label>
+      <textarea class="input" name="ruta_${contadorRutas}_observaciones" rows="1" placeholder="Comentarios específicos de esta ruta..."></textarea>
+    </div>
+  `;
+  
+  contenedor.appendChild(rutaDiv);
+  calcularTotales();
+}
+
+function eliminarRuta(numero) {
+  if (confirm('¿Eliminar esta ruta?')) {
+    document.getElementById(`ruta_${numero}`).remove();
+    calcularTotales();
+  }
+}
+
+function calcularTotales() {
+  let totalKm = 0;
+  let totalEnvios = 0;
+  
+  // Sumar kilómetros y envíos de todas las rutas
+  for (let i = 1; i <= contadorRutas; i++) {
+    const kmInput = document.querySelector(`input[name="ruta_${i}_km"]`);
+    const enviosInput = document.querySelector(`input[name="ruta_${i}_envios"]`);
+    
+    if (kmInput && kmInput.closest('.ruta-item')) {
+      totalKm += parseFloat(kmInput.value) || 0;
+      totalEnvios += parseInt(enviosInput.value) || 0;
+    }
+  }
+  
+  // Actualizar campos de totales
+  document.getElementById('num_envios').value = totalEnvios;
+  document.getElementById('km_diferencia').value = totalKm.toFixed(1);
+}
+
+// Interceptar envío del formulario para incluir datos de rutas
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('formParte');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      // Crear campos hidden con información de rutas
+      const rutasData = [];
+      
+      for (let i = 1; i <= contadorRutas; i++) {
+        const rutaContainer = document.getElementById(`ruta_${i}`);
+        if (rutaContainer) {
+          const ruta = {
+            orden: i,
+            descripcion: document.querySelector(`input[name="ruta_${i}_descripcion"]`)?.value || '',
+            salida_lugar: document.querySelector(`input[name="ruta_${i}_salida_lugar"]`)?.value || '',
+            salida_hora: document.querySelector(`input[name="ruta_${i}_salida_hora"]`)?.value || '',
+            llegada_lugar: document.querySelector(`input[name="ruta_${i}_llegada_lugar"]`)?.value || '',
+            llegada_hora: document.querySelector(`input[name="ruta_${i}_llegada_hora"]`)?.value || '',
+            km_ruta: parseFloat(document.querySelector(`input[name="ruta_${i}_km"]`)?.value) || 0,
+            num_envios_ruta: parseInt(document.querySelector(`input[name="ruta_${i}_envios"]`)?.value) || 0,
+            observaciones_ruta: document.querySelector(`textarea[name="ruta_${i}_observaciones"]`)?.value || ''
+          };
+          rutasData.push(ruta);
+        }
+      }
+      
+      // Añadir campo hidden con datos de rutas JSON
+      const hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = 'rutas_json';
+      hiddenInput.value = JSON.stringify(rutasData);
+      form.appendChild(hiddenInput);
+    });
+  }
+});
+
+// ...existing code...
+
+async function verPartesDia(fecha) {
+  currentFecha = fecha;
+  document.getElementById('modalDiaTitulo').textContent = 'Partes del día ' + fecha;
+  
+  try {
+    const response = await fetch(`/api/partes-dia/${fecha}`);
+    if (response.ok) {
+      const partes = await response.json();
+      mostrarPartesDia(partes, fecha);
+      document.getElementById('modalDiaPartes').style.display = 'block';
+    } else {
+      alert('Error al cargar los partes del día');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error al cargar los partes del día');
+  }
+}
+
+function mostrarPartesDia(partes, fecha) {
+  const container = document.getElementById('listaPartesDia');
+  container.innerHTML = '';
+  
+  if (partes.length === 0) {
+    container.innerHTML = '<p>No hay partes registrados para este día.</p>';
+    return;
+  }
+  
+  partes.forEach((parte, index) => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.marginBottom = '16px';
+    
+    const gastoTotal = (parte.dietas || 0) + (parte.alojamiento || 0) + 
+                      (parte.transporte_billetes || 0) + (parte.gasolina || 0) + 
+                      (parte.comida || 0) + (parte.otros_consumiciones || 0) + 
+                      (parte.material || 0) + (parte.otros_gastos || 0);
+    
+    div.innerHTML = `
+      <h4>🚚 Ruta ${index + 1}</h4>
+      <div class="row">
+        <div><strong>📍 Desde:</strong> ${parte.salida_lugar || 'No especificado'} (${parte.salida_hora || '--:--'})</div>
+        <div><strong>📍 Hasta:</strong> ${parte.llegada_lugar || 'No especificado'} (${parte.llegada_hora || '--:--'})</div>
+      </div>
+      <div class="row">
+        <div><strong>🛣️ Kilómetros:</strong> ${parte.km_diferencia || 0}km</div>
+        <div><strong>📦 Envíos:</strong> ${parte.num_envios || 0}</div>
+        <div><strong>⏱️ Horas:</strong> ${parte.horas || 0}h</div>
+        <div><strong>💰 Gastos:</strong> ${gastoTotal.toFixed(2)}€</div>
+      </div>
+      ${parte.observaciones ? `<p><strong>📝 Observaciones:</strong> ${parte.observaciones}</p>` : ''}
+      <div style="text-align: right; margin-top: 12px;">
+        <button class="btn-sm" onclick="editarDia('${fecha}', '${parte.id}')">✏️ Editar</button>
+        <button class="btn-sm" style="background: var(--danger);" onclick="eliminarParte(${parte.id})">🗑️ Eliminar</button>
+      </div>
+    `;
+    
+    container.appendChild(div);
+  });
+}
+
+function agregarNuevoParteDia() {
+  cerrarModalDia();
+  crearDia(currentFecha);
+}
+
+function cerrarModalDia() {
+  document.getElementById('modalDiaPartes').style.display = 'none';
+  currentFecha = null;
+}
+
+async function eliminarParte(parteId) {
+  if (!confirm('¿Estás seguro de que quieres eliminar este parte?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/api/parte/${parteId}`, {
+      method: 'DELETE'
+    });
+    
+    if (response.ok) {
+      alert('Parte eliminado correctamente');
+      // Recargar la lista de partes del día
+      if (currentFecha) {
+        verPartesDia(currentFecha);
+      }
+      // Recargar la página para actualizar el calendario
+      setTimeout(() => location.reload(), 500);
+    } else {
+      alert('Error al eliminar el parte');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error al eliminar el parte');
+  }
+}
+
+// ...existing code...
+
+async function editarDia(fecha, parteId) {
+  currentParteId = parteId;
+  document.getElementById('modalTitulo').textContent = 'Editar Parte - ' + fecha;
+  document.getElementById('modalFecha').value = fecha;
+  document.getElementById('modalParteId').value = parteId;
+  
+  try {
+    // Cargar datos del parte
+    const response = await fetch(`/api/parte/${parteId}`);
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Llenar el formulario con los datos existentes
+      document.getElementById('km_salida').value = data.km_salida || '';
+      document.getElementById('km_llegada').value = data.km_llegada || '';
+      document.getElementById('km_diferencia').value = data.km_diferencia || '';
+      document.getElementById('repostaje').value = data.repostaje || '';
+      document.getElementById('num_factura').value = data.num_factura || '';
+      
+      document.getElementById('salida_lugar').value = data.salida_lugar || '';
+      document.getElementById('salida_hora').value = data.salida_hora || '';
+      document.getElementById('llegada_lugar').value = data.llegada_lugar || '';
+      document.getElementById('llegada_hora').value = data.llegada_hora || '';
+      document.getElementById('tiempo_total').value = data.tiempo_total || '';
+      
+      document.getElementById('dietas').value = data.dietas || '';
+      document.getElementById('alojamiento').value = data.alojamiento || '';
+      document.getElementById('transporte_billetes').value = data.transporte_billetes || '';
+      document.getElementById('gasolina').value = data.gasolina || '';
+      document.getElementById('comida').value = data.comida || '';
+      document.getElementById('material').value = data.material || '';
+      document.getElementById('otros_gastos').value = data.otros_gastos || '';
+      
+      document.getElementById('num_envios').value = data.num_envios || '';
+      document.getElementById('horas').value = data.horas || '';
+      document.getElementById('observaciones').value = data.observaciones || '';
+      
+      // Mantener acción del formulario para actualización normal
+      document.getElementById('formParte').action = '/repartidor/parte';
+      document.getElementById('formParte').method = 'post';
+      
+    } else {
+      alert('Error al cargar los datos del parte');
+      return;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error al cargar los datos del parte');
+    return;
+  }
+  
+  document.getElementById('modalParte').style.display = 'block';
+}
+
+function cerrarModal() {
+  document.getElementById('modalParte').style.display = 'none';
+  currentParteId = null;
+}
+
+// Calcular diferencia de km automáticamente
+document.addEventListener('DOMContentLoaded', function() {
+  const salida = document.getElementById('km_salida');
+  const llegada = document.getElementById('km_llegada');
+  const diferencia = document.getElementById('km_diferencia');
+  
+  function calcularDiferencia() {
+    if (salida.value && llegada.value) {
+      diferencia.value = (parseFloat(llegada.value) - parseFloat(salida.value)).toFixed(1);
+    }
+  }
+  
+  salida.addEventListener('input', calcularDiferencia);
+  llegada.addEventListener('input', calcularDiferencia);
+});
+
+// Funciones para el modal de múltiples partes por día
+function verPartesDia(fecha) {
+  document.getElementById('modalDiaTitulo').textContent = 'Partes del día ' + fecha;
+  const listaPartesDia = document.getElementById('listaPartesDia');
+  listaPartesDia.innerHTML = '';  // Limpiar lista existente
+  
+  // Aquí deberías cargar las partes del día desde el servidor
+  // Por ahora, añadimos datos de ejemplo estáticos
+  const partesEjemplo = [
+    {
+      id: 1,
+      ruta: 'Ruta 1',
+      km: 10,
+      horas: 1.5,
+      gastos: 20,
+      observaciones: 'Todo bien'
+    },
+    {
+      id: 2,
+      ruta: 'Ruta 2',
+      km: 15,
+      horas: 2,
+      gastos: 25,
+      observaciones: 'Algunos retrasos'
+    }
+  ];
+  
+  partesEjemplo.forEach(parte => {
+    const divParte = document.createElement('div');
+    divParte.className = 'parte-dia';
+    divParte.innerHTML = `
+      <div><strong>${parte.ruta}</strong></div>
+      <div>Km: ${parte.km}</div>
+      <div>Horas: ${parte.horas}</div>
+      <div>Gastos: ${parte.gastos}€</div>
+      <div>Observaciones: ${parte.observaciones}</div>
+      <button class="btn-editar" onclick="editarParteDia(${parte.id})">✏️ Editar</button>
+    `;
+    listaPartesDia.appendChild(divParte);
+  });
+  
+  document.getElementById('modalDiaPartes').style.display = 'block';
+}
+
+function cerrarModalDia() {
+  document.getElementById('modalDiaPartes').style.display = 'none';
+}
+
+function agregarNuevoParteDia() {
+  // Aquí puedes abrir el modal de creación de parte con la fecha ya seleccionada
+  const fecha = document.getElementById('modalFecha').value;
+  crearDia(fecha);
+  
+  cerrarModalDia();
+}
+
+function editarParteDia(parteId) {
+  // Aquí deberías cargar los datos del parte seleccionado y abrir el modal de edición
+  // Por ahora, solo cerramos el modal de partes del día
+  cerrarModalDia();
+  
+  // Luego abrimos el modal de edición de parte diario
+  editarDia(new Date().toISOString().split('T')[0], parteId);
+}
+</script>
+
+{% endblock %}

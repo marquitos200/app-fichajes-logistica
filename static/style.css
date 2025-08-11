@@ -1,0 +1,768 @@
+:root{ 
+  /* Paleta clara y profesional */
+  --bg: #f8fafc; 
+  --card: #ffffff; 
+  --text: #1e293b; 
+  --text-light: #475569;
+  --muted: #64748b; 
+  --accent: #2563eb; 
+  --accent-light: #3b82f6;
+  --success: #059669; 
+  --success-light: #10b981;
+  --warning: #d97706; 
+  --danger: #dc2626;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --hover: #f8fafc;
+  --hover-dark: #e2e8f0;
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+*{ box-sizing:border-box; }
+body{ 
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell; 
+  background: var(--bg); 
+  color: var(--text); 
+  margin: 0; 
+  line-height: 1.6;
+}
+a{ color:var(--accent); text-decoration:none; }
+header{ 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  padding: 16px 24px; 
+  border-bottom: 1px solid var(--border); 
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.container{ max-width:1100px; margin:0 auto; padding:24px; }
+.card{ 
+  background: var(--card); 
+  border: 1px solid var(--border); 
+  border-radius: 12px; 
+  padding: 24px; 
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.input, select{ 
+  width: 100%; 
+  padding: 12px 16px; 
+  background: var(--card); 
+  color: var(--text); 
+  border: 2px solid var(--border); 
+  border-radius: 8px; 
+  margin: 6px 0 14px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+  background: var(--card);
+}
+button{ 
+  padding: 12px 20px; 
+  border-radius: 8px; 
+  border: 1px solid var(--border); 
+  background: var(--card); 
+  color: var(--text); 
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background: var(--hover-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+button.primary{ 
+  background: var(--accent); 
+  border-color: var(--accent); 
+  color: white;
+}
+
+button.primary:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+button.secondary {
+  background: var(--muted);
+  border-color: var(--muted);
+  color: white;
+}
+
+button.secondary:hover {
+  background: #475569;
+  border-color: #475569;
+}
+.table{ 
+  width: 100%; 
+  border-collapse: collapse; 
+  background: var(--card);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.table th, .table td{ 
+  padding: 12px 16px; 
+  border-bottom: 1px solid var(--border); 
+  text-align: left; 
+}
+
+.table th {
+  background: var(--border-light);
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 2px solid var(--border);
+}
+
+.table tr:hover {
+  background: var(--hover);
+}
+.row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.badge{ 
+  background: var(--hover); 
+  border: 1px solid var(--border); 
+  padding: 4px 12px; 
+  border-radius: 999px; 
+  font-size: 12px; 
+  color: var(--muted);
+  font-weight: 500;
+}
+footer{ padding:24px; color:var(--muted); text-align:center; }
+
+/* Estilos para el formulario del repartidor */
+.section-header {
+  margin: 24px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+
+.section-header h3 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.gastos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.gasto-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.gasto-row label {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.btn-sm {
+  display: inline-block;
+  padding: 6px 12px;
+  margin: 0 4px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  text-decoration: none;
+  border: 1px solid var(--accent);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-sm:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+/* Estilos para calendario */
+.calendario {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.calendario-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--accent);
+  color: white;
+}
+
+.dia-header {
+  padding: 16px 8px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.calendario-semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+
+.dia-celda {
+  min-height: 120px;
+  border-right: 1px solid var(--border);
+  padding: 12px;
+  position: relative;
+  background: var(--card);
+  transition: all 0.2s ease;
+}
+
+.dia-celda:hover {
+  background: var(--hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.dia-celda.hoy {
+  background: #dbeafe;
+  border: 2px solid var(--accent);
+}
+
+.dia-celda.con-parte {
+  background: #dcfce7;
+  border-left: 4px solid var(--success);
+}
+
+.dia-celda.futuro {
+  background: var(--hover);
+  color: var(--muted);
+}
+
+.dia-celda.vacio {
+  background: #f8fafc;
+}
+
+.dia-numero {
+  font-weight: 600;
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.dia-resumen {
+  font-size: 0.75em;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+.dia-resumen small {
+  display: block;
+  margin: 1px 0;
+  color: #666;
+}
+
+.btn-dia {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75em;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow);
+}
+
+.btn-dia:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.btn-dia.nuevo {
+  background: var(--success);
+}
+
+.btn-dia.nuevo:hover {
+  background: #047857;
+}
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: var(--card);
+  padding: 32px;
+  border-radius: 16px;
+  max-width: 900px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+}
+
+.close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  background: none;
+  border: none;
+  padding: 4px;
+}
+
+.close:hover {
+  color: var(--danger);
+  background: var(--hover);
+  border-radius: 4px;
+}
+
+.alert {
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid;
+}
+
+.alert-success {
+  background: #f0fdf4;
+  border-left-color: var(--success);
+  color: #166534;
+}
+
+/* Estilos para estadísticas */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 2em;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stat-card p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Estilos para fieldsets */
+.fieldset {
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  background: var(--card);
+}
+
+.fieldset legend {
+  font-weight: 600;
+  color: var(--accent);
+  padding: 0 12px;
+  font-size: 1.1em;
+}
+
+/* Información de empresa */
+.company-info {
+  background: var(--hover);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.company-info code {
+  background: var(--accent);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
+/* Mejoras para enlaces */
+a:hover {
+  text-decoration: underline;
+}
+
+/* Mejoras para labels */
+label {
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Espaciado mejorado para formularios */
+form > div {
+  margin-bottom: 16px;
+}
+
+/* Estilos para pequeños elementos */
+small {
+  color: var(--muted);
+  font-size: 0.875em;
+}
+
+/* Estilos para el resumen de tabla */
+.table-summary {
+  background: var(--hover);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 20px;
+  text-align: center;
+  font-size: 1.1em;
+}
+
+/* Mejoras para contenedores de scroll horizontal */
+div[style*="overflow-x"] {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+/* Estilos para celdas vacías */
+td[style*="text-align:center"] {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Mejoras para elementos strong */
+strong {
+  font-weight: 600;
+}
+
+/* Estilos adicionales para asegurar visibilidad */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  background-color: var(--card) !important;
+  color: var(--text) !important;
+  border: 2px solid var(--border) !important;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+  background-color: var(--card) !important;
+  color: var(--text) !important;
+}
+
+/* Estilos específicos para opciones de select */
+select option {
+  background-color: var(--card);
+  color: var(--text);
+  padding: 8px;
+}
+
+/* Labels mejorados */
+label {
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 6px;
+  display: block;
+  font-size: 14px;
+}
+
+/* Mejoras para el modal de formulario */
+.modal h2 {
+  color: var(--text);
+  margin-bottom: 24px;
+  font-size: 1.5em;
+  font-weight: 600;
+}
+
+.modal h3 {
+  color: var(--accent);
+  margin: 20px 0 12px 0;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+/* Placeholder text */
+::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+/* Disabled inputs */
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background-color: var(--hover) !important;
+  color: var(--muted) !important;
+  cursor: not-allowed;
+}
+
+/* Botones de acción del modal */
+.modal-content button {
+  margin-right: 12px;
+  margin-top: 16px;
+}
+
+.modal-content button.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.modal-content button.secondary {
+  background: var(--card);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.modal-content button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+/* Sistema de notificaciones bonitas */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  max-width: 400px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease-out;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notification:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+}
+
+.notification.success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border-left: 4px solid #047857;
+}
+
+.notification.error {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-left: 4px solid #b91c1c;
+}
+
+.notification.warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border-left: 4px solid #b45309;
+}
+
+.notification.info {
+  background: linear-gradient(135deg, var(--accent), #1d4ed8);
+  color: white;
+  border-left: 4px solid #1e40af;
+}
+
+.notification-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 16px;
+}
+
+.notification-message {
+  opacity: 0.9;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  font-size: 18px;
+}
+
+.notification-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.notification.slide-out {
+  animation: slideOut 0.3s ease-in forwards;
+}
+
+/* Alertas inline bonitas para formularios */
+.alert-inline {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 12px 0;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.alert-inline.error {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.alert-inline.success {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.alert-inline.warning {
+  background: #fffbeb;
+  border-color: #fed7aa;
+  color: #b45309;
+}
+
+.alert-inline.info {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+/* Mejoras para el formulario de login/registro */
+.form-error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form-success {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}

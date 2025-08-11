@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card" style="max-width:680px;margin:40px auto">
+  <h2>Registro</h2>
+  <p class="badge">Si eres admin, crea una nueva empresa. Si eres repartidor, únete con la clave de empresa.</p>
+  <form method="post">
+    <div class="row">
+      <div>
+        <h3>Empresa</h3>
+        <label>Nombre de empresa</label>
+        <input class="input" name="company" placeholder="ACME Logistics">
+        <label>Clave de empresa (si ya existe)</label>
+        <input class="input" name="company_key" placeholder="clave compartida por el admin">
+      </div>
+      <div>
+        <h3>Usuario</h3>
+        <label>Usuario</label>
+        <input class="input" name="username" required>
+        <label>Contraseña</label>
+        <input class="input" type="password" name="password" required>
+        <label>Rol</label>
+        <select name="role" class="input">
+          <option value="repartidor">Repartidor</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <button class="primary" type="submit">Crear cuenta</button>
+  </form>
+</div>
+{% endblock %}

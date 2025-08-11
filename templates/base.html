@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ title or "App Fichajes" }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div>
+      <strong>App Fichajes Logística</strong>
+      {% if request.state.user %}
+        <span class="badge" style="margin-left:10px">{{ request.state.user.role }} · {{ request.state.user.username }}</span>
+        {% if request.state.company %}
+        <span class="badge" style="margin-left:10px">Empresa: {{ request.state.company.name }}</span>
+        {% endif %}
+      {% endif %}
+    </div>
+    <nav>
+      {% if request.state.user %}
+        {% if request.state.user.role == "admin" %}
+        <a href="/admin">Panel admin</a>
+        {% else %}
+        <a href="/repartidor">Panel repartidor</a>
+        {% endif %}
+        <a style="margin-left:14px" href="/logout">Salir</a>
+      {% else %}
+        <a href="/login">Entrar</a>
+      {% endif %}
+    </nav>
+  </header>
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- Flash messages como data attributes -->
+  {% if flash_messages %}
+  <div id="flash-data" style="display: none;" 
+    {% for flash in flash_messages %}
+    data-flash-{{ loop.index }}='{{ flash|tojson }}'
+    {% endfor %}
+    data-count="{{ flash_messages|length }}">
+  </div>
+  {% endif %}
+
+  <!-- Sistema de notificaciones JavaScript -->
+  <script>
+  // Sistema de notificaciones bonitas
+  class NotificationSystem {
+    constructor() {
+      this.container = this.createContainer();
+      document.body.appendChild(this.container);
+    }
+
+    createContainer() {
+      const container = document.createElement('div');
+      container.id = 'notification-container';
+      container.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        pointer-events: none;
+      `;
+      return container;
+    }
+
+    show(type, title, message, duration = 5000) {
+      const notification = this.createNotification(type, title, message);
+      this.container.appendChild(notification);
+      
+      // Permitir interacción con esta notificación
+      notification.style.pointerEvents = 'auto';
+      
+      // Auto-ocultar después del tiempo especificado
+      if (duration > 0) {
+        setTimeout(() => {
+          this.hide(notification);
+        }, duration);
+      }
+      
+      return notification;
+    }
+
+    createNotification(type, title, message) {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      
+      const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+      };
+      
+      notification.innerHTML = `
+        <div class="notification-icon">${icons[type] || '📝'}</div>
+        <div class="notification-content">
+          <div class="notification-title">${title}</div>
+          <div class="notification-message">${message}</div>
+        </div>
+        <button class="notification-close" onclick="notifications.hide(this.parentElement)">×</button>
+      `;
+      
+      // Hacer clic en la notificación para cerrarla
+      notification.addEventListener('click', (e) => {
+        if (e.target === notification || e.target.classList.contains('notification-content')) {
+          this.hide(notification);
+        }
+      });
+      
+      return notification;
+    }
+
+    hide(notification) {
+      notification.classList.add('slide-out');
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.parentElement.removeChild(notification);
+        }
+      }, 300);
+    }
+
+    success(title, message, duration) {
+      return this.show('success', title, message, duration);
+    }
+
+    error(title, message, duration) {
+      return this.show('error', title, message, duration);
+    }
+
+    warning(title, message, duration) {
+      return this.show('warning', title, message, duration);
+    }
+
+    info(title, message, duration) {
+      return this.show('info', title, message, duration);
+    }
+  }
+
+  // Crear instancia global
+  const notifications = new NotificationSystem();
+
+  // Funciones de conveniencia
+  function showSuccess(title, message, duration) {
+    return notifications.success(title, message, duration);
+  }
+
+  function showError(title, message, duration) {
+    return notifications.error(title, message, duration);
+  }
+
+  function showWarning(title, message, duration) {
+    return notifications.warning(title, message, duration);
+  }
+
+  function showInfo(title, message, duration) {
+    return notifications.info(title, message, duration);
+  }
+
+  // Detectar mensajes flash del servidor y mostrarlos como notificaciones
+  document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar mensajes flash del servidor
+    const flashContainer = document.getElementById('flash-data');
+    if (flashContainer) {
+      const count = parseInt(flashContainer.getAttribute('data-count') || '0');
+      for (let i = 1; i <= count; i++) {
+        const flashData = flashContainer.getAttribute(`data-flash-${i}`);
+        if (flashData) {
+          try {
+            const flash = JSON.parse(flashData);
+            notifications.show(flash.type, flash.title, flash.message, 6000);
+          } catch (e) {
+            console.error('Error parsing flash message:', e);
+          }
+        }
+      }
+    }
+    
+    // Buscar alertas existentes y convertirlas en notificaciones
+    const alerts = document.querySelectorAll('.alert, .form-error, .form-success');
+    alerts.forEach(alert => {
+      let type = 'info';
+      let title = 'Información';
+      
+      if (alert.classList.contains('alert-success') || alert.classList.contains('form-success')) {
+        type = 'success';
+        title = '¡Éxito!';
+      } else if (alert.classList.contains('alert-error') || alert.classList.contains('form-error')) {
+        type = 'error';
+        title = 'Error';
+      } else if (alert.classList.contains('alert-warning')) {
+        type = 'warning';
+        title = 'Advertencia';
+      }
+      
+      const message = alert.textContent.trim();
+      if (message) {
+        notifications.show(type, title, message, 6000);
+      }
+      
+      // Ocultar la alerta original
+      alert.style.display = 'none';
+    });
+  });
+
+  // Interceptar envíos de formularios para mostrar notificaciones bonitas
+  document.addEventListener('submit', function(e) {
+    // Mostrar notificación de "enviando..." para formularios importantes
+    const form = e.target;
+    if (form.action.includes('/login') || form.action.includes('/register') || form.action.includes('/parte')) {
+      showInfo('Procesando...', 'Por favor espera un momento', 2000);
+    }
+  });
+  </script>
+</body>
+</html>

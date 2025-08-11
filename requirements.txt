@@ -1,0 +1,21 @@
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+sqlmodel==0.0.16
+passlib[bcrypt]==1.7.4
+jinja2==3.1.4
+python-multipart==0.0.9
+pandas==2.2.2
+openpyxl==3.1.3
+reportlab==4.2.0
+starlette==0.37.2
+psycopg2-binary==2.9.9111.0
+uvicorn[standard]==0.30.1
+sqlmodel==0.0.16
+passlib[bcrypt]==1.7.4
+jinja2==3.1.4
+python-multipart==0.0.9
+pandas==2.2.2
+openpyxl==3.1.3
+# Optional for PDF export (choose one):
+weasyprint==62.3
+reportlab==4.2.2
